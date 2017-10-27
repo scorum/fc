@@ -134,28 +134,17 @@ Proof Equihash::FindProof(){
     this->nonce = 1;
     while (nonce < MAX_NONCE) {
         nonce++;
-        uint64_t start_cycles = rdtsc();
+        rdtsc();
         InitializeMemory(); //allocate
         FillMemory(4UL << (n / (k + 1)-1));   //fill with hashes
-        uint64_t fill_end = rdtsc();
-        /*fp = fopen("proof.log", "a+");
-        fprintf(fp, "\n===MEMORY FILLED:\n");
-        PrintTuples(fp);
-        fclose(fp);*/
+        rdtsc();
         for (unsigned i = 1; i <= k; ++i) {
-            uint64_t resolve_start = rdtsc();
+            rdtsc();
             bool to_store = (i == k);
             ResolveCollisions(to_store); //XOR collisions, concatenate indices and shift
-            uint64_t resolve_end = rdtsc();
-           /* fp = fopen("proof.log", "a+");
-            fprintf(fp, "\n===RESOLVED AFTER STEP %d:\n", i);
-            PrintTuples(fp);
-            fclose(fp);*/
+            rdtsc();
         }
-        uint64_t stop_cycles = rdtsc();
-
-        double  mcycles_d = (double)(stop_cycles - start_cycles) / (1UL << 20);
-        uint32_t kbytes = (tupleList.size()*LIST_LENGTH*k*sizeof(uint32_t)) / (1UL << 10);
+        rdtsc();
 
         //Duplicate check
         for (unsigned i = 0; i < solutions.size(); ++i) {

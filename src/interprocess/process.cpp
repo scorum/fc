@@ -1,3 +1,9 @@
+#include <bits/c++config.h>
+#ifdef _GLIBCXX_DEPRECATED
+    #undef _GLIBCXX_DEPRECATED
+    #define _GLIBCXX_DEPRECATED
+#endif
+
 #include <fc/interprocess/process.hpp>
 #include <fc/io/iostream.hpp>
 #include <fc/io/buffered_iostream.hpp>

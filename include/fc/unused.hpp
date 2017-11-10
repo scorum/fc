@@ -1,7 +1,7 @@
 #pragma once
 
-#if defined(__clang__) || defined(__GNUC__) || defined(__GNUG__)
-#define FC_UNUSED __attribute__ ((unused))
-#elif defined(_MSC_VER)
-#define FC_UNUSED
+#if defined(_MSC_VER)
+   #define FC_UNUSED
+#else
+   #define FC_UNUSED __attribute__ ((unused))
 #endif

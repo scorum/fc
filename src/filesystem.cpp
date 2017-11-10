@@ -245,13 +245,13 @@ namespace fc {
   void remove_all( const path& p ) { boost::filesystem::remove_all(p); }
   void copy( const path& f, const path& t ) { 
      try {
-  	    boost::filesystem::copy( boost::filesystem::path(f), boost::filesystem::path(t) ); 
+        boost::filesystem::copy( boost::filesystem::path(f), boost::filesystem::path(t) ); 
      } catch ( boost::system::system_error& e ) {
-     	FC_THROW( "Copy from ${srcfile} to ${dstfile} failed because ${reason}",
-	         ("srcfile",f)("dstfile",t)("reason",e.what() ) );
+        FC_THROW( "Copy from ${srcfile} to ${dstfile} failed because ${reason}",
+             ("srcfile",f)("dstfile",t)("reason",e.what() ) );
      } catch ( ... ) {
-     	FC_THROW( "Copy from ${srcfile} to ${dstfile} failed",
-	         ("srcfile",f)("dstfile",t)("inner", fc::except_str() ) );
+        FC_THROW( "Copy from ${srcfile} to ${dstfile} failed",
+             ("srcfile",f)("dstfile",t)("inner", fc::except_str() ) );
      }
   }
   void resize_file( const path& f, size_t t ) 
@@ -300,7 +300,7 @@ namespace fc {
 
   void rename( const path& f, const path& t ) { 
      try {
-  	    boost::filesystem::rename( boost::filesystem::path(f), boost::filesystem::path(t) ); 
+        boost::filesystem::rename( boost::filesystem::path(f), boost::filesystem::path(t) ); 
      } catch ( boost::system::system_error& ) {
          try{
              boost::filesystem::copy( boost::filesystem::path(f), boost::filesystem::path(t) ); 
@@ -310,8 +310,8 @@ namespace fc {
                      ("srcfile",f)("dstfile",t)("reason",e.what() ) );
          }
      } catch ( ... ) {
-     	FC_THROW( "Rename from ${srcfile} to ${dstfile} failed",
-	         ("srcfile",f)("dstfile",t)("inner", fc::except_str() ) );
+        FC_THROW( "Rename from ${srcfile} to ${dstfile} failed",
+             ("srcfile",f)("dstfile",t)("inner", fc::except_str() ) );
      }
   }
   void create_hard_link( const path& f, const path& t ) { 

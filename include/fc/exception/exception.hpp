@@ -8,6 +8,7 @@
 #include <exception>
 #include <functional>
 #include <unordered_map>
+#include <boost/type_index.hpp>
 
 namespace fc
 {
@@ -383,7 +384,7 @@ namespace fc
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "rethrow ${what}: ", ("what",e.what())), \
                 fc::std_exception_code,\
-                typeid(e).name(), \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
                 e.what() ) ; \
       wlog( "${details}", ("details",fce.to_detail_string()) ); \
       throw fce;\
@@ -400,11 +401,20 @@ namespace fc
       wlog( "${details}", ("details",er.to_detail_string()) ); \
       wdump( __VA_ARGS__ ); \
       FC_RETHROW_EXCEPTION( er, warn, "rethrow", FC_FORMAT_ARG_PARAMS(__VA_ARGS__) ); \
-   } catch( const std::exception& e ) {  \
+   } catch (const std::system_error& e) { \
+      fc::exception fce(\
+                FC_LOG_MESSAGE(warn, "rethrow ${what}(${errno}, \"${errnostr})\":", FC_FORMAT_ARG_PARAMS(__VA_ARGS__)("what", e.what())("errno", errno)("errnostr", strerror(errno))), \
+                fc::std_exception_code, \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
+                e.what()); \
+      wlog("${details}", ("details", fce.to_detail_string())); \
+      wdump(__VA_ARGS__); \
+      throw fce; \
+   } catch( const std::exception& e ) { \
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "rethrow ${what}: ", FC_FORMAT_ARG_PARAMS( __VA_ARGS__ )("what",e.what())), \
                 fc::std_exception_code,\
-                typeid(e).name(), \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
                 e.what() ) ; \
       wlog( "${details}", ("details",fce.to_detail_string()) ); \
       wdump( __VA_ARGS__ ); \
@@ -426,7 +436,7 @@ namespace fc
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "rethrow ${what}: ",FC_FORMAT_ARG_PARAMS( __VA_ARGS__  )("what",e.what()) ), \
                 fc::std_exception_code,\
-                typeid(e).name(), \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
                 e.what() ) ; \
       wlog( "${details}", ("details",fce.to_detail_string()) ); \
       wdump( __VA_ARGS__ ); \
@@ -451,7 +461,7 @@ namespace fc
       fc::exception fce( \
                 FC_LOG_MESSAGE( LOG_LEVEL, "${what}: " FORMAT,__VA_ARGS__("what",e.what())), \
                 fc::std_exception_code,\
-                typeid(e).name(), \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
                 e.what() ) ; throw fce;\
    } catch( ... ) {  \
       throw fc::unhandled_exception( \
@@ -466,11 +476,10 @@ namespace fc
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "${what}: ",FC_FORMAT_ARG_PARAMS(__VA_ARGS__)("what",e.what())), \
                 fc::std_exception_code,\
-                typeid(e).name(), \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
                 e.what() ) ; throw fce;\
    } catch( ... ) {  \
       throw fc::unhandled_exception( \
                 FC_LOG_MESSAGE( warn, "",FC_FORMAT_ARG_PARAMS(__VA_ARGS__)), \
                 std::current_exception() ); \
    }
-

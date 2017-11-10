@@ -38,18 +38,18 @@ static void set_thread_name(const char* threadName)
 # include <pthread.h>
 static void set_thread_name(const char* threadName)
 {
-	pthread_setname_np(pthread_self(), threadName);
+    pthread_setname_np(pthread_self(), threadName);
 }
 #elif defined(__APPLE__) && !defined(NDEBUG)
 # include <pthread.h>
 static void set_thread_name(const char* threadName)
 {
-	pthread_setname_np(threadName);
+    pthread_setname_np(threadName);
 }
 #else
 static void set_thread_name(const char* threadName)
 {
-	// do nothing in release mode
+    // do nothing in release mode
 }
 #endif
 

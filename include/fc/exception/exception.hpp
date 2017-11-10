@@ -5,6 +5,7 @@
  */
 #include <fc/log/logger.hpp>
 #include <fc/optional.hpp>
+#include <fc/unused.hpp>
 #include <exception>
 #include <functional>
 #include <unordered_map>
@@ -217,7 +218,7 @@ namespace fc
 
 #define FC_REGISTER_EXCEPTIONS( SEQ )\
      \
-   static bool exception_init = []()->bool{ \
+   FC_UNUSED static bool exception_init = []()->bool{ \
     BOOST_PP_SEQ_FOR_EACH( FC_REGISTER_EXCEPTION, v, SEQ )  \
       return true; \
    }();  \

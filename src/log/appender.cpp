@@ -9,6 +9,7 @@
 #include <fc/log/file_appender.hpp>
 #include <fc/log/gelf_appender.hpp>
 #include <fc/variant.hpp>
+#include <fc/unused.hpp>
 #include "console_defines.h"
 
 
@@ -43,9 +44,9 @@ namespace fc {
       get_appender_map()[name] = ap;
       return ap;
    }
-   
-   static bool reg_console_appender = appender::register_appender<console_appender>( "console" );
-   static bool reg_file_appender = appender::register_appender<file_appender>( "file" );
-   static bool reg_gelf_appender = appender::register_appender<gelf_appender>( "gelf" );
+
+   FC_UNUSED static bool reg_console_appender = appender::register_appender<console_appender>( "console" );
+   FC_UNUSED static bool reg_file_appender = appender::register_appender<file_appender>( "file" );
+   FC_UNUSED static bool reg_gelf_appender = appender::register_appender<gelf_appender>( "gelf" );
 
 } // namespace fc

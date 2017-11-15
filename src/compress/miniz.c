@@ -2260,6 +2260,9 @@ static int tdefl_flush_block(tdefl_compressor *d, int flush)
   return d->m_output_flush_remaining;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+
 #if MINIZ_USE_UNALIGNED_LOADS_AND_STORES
 #define TDEFL_READ_UNALIGNED_WORD(p) *(const mz_uint16*)(p)
 static MZ_FORCEINLINE void tdefl_find_match(tdefl_compressor *d, mz_uint lookahead_pos, mz_uint max_dist, mz_uint max_match_len, mz_uint *pMatch_dist, mz_uint *pMatch_len)
@@ -2295,6 +2298,7 @@ static MZ_FORCEINLINE void tdefl_find_match(tdefl_compressor *d, mz_uint lookahe
     }
   }
 }
+#pragma GCC diagnostic pop
 #else
 static MZ_FORCEINLINE void tdefl_find_match(tdefl_compressor *d, mz_uint lookahead_pos, mz_uint max_dist, mz_uint max_match_len, mz_uint *pMatch_dist, mz_uint *pMatch_len)
 {

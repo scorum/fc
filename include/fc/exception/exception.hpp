@@ -381,6 +381,14 @@ namespace fc
    catch( fc::exception& er ) { \
       wlog( "${details}", ("details",er.to_detail_string()) ); \
       FC_RETHROW_EXCEPTION( er, warn, "rethrow" ); \
+   } catch (const std::system_error& e) { \
+      fc::exception fce(\
+                FC_LOG_MESSAGE(warn, "rethrow ${what}(${errno}, \"${errnostr})\":", ("what", e.what())("errno", errno)("errnostr", strerror(errno))), \
+                fc::std_exception_code, \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
+                e.what()); \
+      wlog("${details}", ("details", fce.to_detail_string())); \
+      throw fce; \
    } catch( const std::exception& e ) {  \
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "rethrow ${what}: ", ("what",e.what())), \
@@ -433,6 +441,14 @@ namespace fc
    catch( fc::exception& er ) { \
       wlog( "${details}", ("details",er.to_detail_string()) ); \
       wdump( __VA_ARGS__ ); \
+   } catch (const std::system_error& e) { \
+      fc::exception fce(\
+                FC_LOG_MESSAGE(warn, "rethrow ${what}(${errno}, \"${errnostr})\":", FC_FORMAT_ARG_PARAMS(__VA_ARGS__)("what", e.what())("errno", errno)("errnostr", strerror(errno))), \
+                fc::std_exception_code, \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
+                e.what()); \
+      wlog("${details}", ("details", fce.to_detail_string())); \
+      wdump(__VA_ARGS__); \
    } catch( const std::exception& e ) {  \
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "rethrow ${what}: ",FC_FORMAT_ARG_PARAMS( __VA_ARGS__  )("what",e.what()) ), \
@@ -458,12 +474,20 @@ namespace fc
 #define FC_RETHROW_EXCEPTIONS( LOG_LEVEL, FORMAT, ... ) \
    catch( fc::exception& er ) { \
       FC_RETHROW_EXCEPTION( er, LOG_LEVEL, FORMAT, __VA_ARGS__ ); \
+   } catch (const std::system_error& e) { \
+      fc::exception fce(\
+                FC_LOG_MESSAGE(LOG_LEVEL, "${what}(${errno}, \"${errnostr})\":" FORMAT, __VA_ARGS__("what", e.what())("errno", errno)("errnostr", strerror(errno))), \
+                fc::std_exception_code, \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
+                e.what()); \
+      throw fce; \
    } catch( const std::exception& e ) {  \
       fc::exception fce( \
-                FC_LOG_MESSAGE( LOG_LEVEL, "${what}: " FORMAT,__VA_ARGS__("what",e.what())), \
+                FC_LOG_MESSAGE( LOG_LEVEL, "${what}: " FORMAT, __VA_ARGS__("what",e.what())), \
                 fc::std_exception_code,\
                 boost::typeindex::type_id_runtime(e).pretty_name(), \
-                e.what() ) ; throw fce;\
+                e.what() ) ; \
+      throw fce;\
    } catch( ... ) {  \
       throw fc::unhandled_exception( \
                 FC_LOG_MESSAGE( LOG_LEVEL, FORMAT,__VA_ARGS__), \
@@ -473,14 +497,23 @@ namespace fc
 #define FC_CAPTURE_AND_RETHROW( ... ) \
    catch( fc::exception& er ) { \
       FC_RETHROW_EXCEPTION( er, warn, "", FC_FORMAT_ARG_PARAMS(__VA_ARGS__) ); \
+   } catch (const std::system_error& e) { \
+      fc::exception fce(\
+                FC_LOG_MESSAGE(warn, "${what}(${errno}, \"${errnostr})\":", FC_FORMAT_ARG_PARAMS(__VA_ARGS__)("what", e.what())("errno", errno)("errnostr", strerror(errno))), \
+                fc::std_exception_code, \
+                boost::typeindex::type_id_runtime(e).pretty_name(), \
+                e.what()); \
+      throw fce; \
    } catch( const std::exception& e ) {  \
       fc::exception fce( \
                 FC_LOG_MESSAGE( warn, "${what}: ",FC_FORMAT_ARG_PARAMS(__VA_ARGS__)("what",e.what())), \
                 fc::std_exception_code,\
                 boost::typeindex::type_id_runtime(e).pretty_name(), \
-                e.what() ) ; throw fce;\
+                e.what() ) ; \
+      throw fce;\
    } catch( ... ) {  \
       throw fc::unhandled_exception( \
                 FC_LOG_MESSAGE( warn, "",FC_FORMAT_ARG_PARAMS(__VA_ARGS__)), \
                 std::current_exception() ); \
    }
+

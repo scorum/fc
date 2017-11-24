@@ -10,7 +10,7 @@ namespace fc {
     *  sizeof(Storage).
     *
     *  The string will serialize the same way as std::string for variant and raw formats
-    *  The string will sort according to the comparison operators defined for Storage, this enables effecient
+    *  The string will sort according to the comparison operators defined for Storage, this enables efficient
     *  sorting.
     */
    template<typename Storage = std::pair<uint64_t,uint64_t> >

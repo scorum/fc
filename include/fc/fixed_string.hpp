@@ -1,7 +1,72 @@
 #pragma once
+#include <fc/uint128.hpp>
 #include <fc/io/raw_fwd.hpp>
 
+#include <boost/endian/conversion.hpp>
+
 namespace fc {
+
+/**
+ * Endian-reversible pair class.
+ */
+template <typename A, typename B> struct erpair
+{
+    erpair()
+    {
+    }
+    erpair(const A& a, const B& b)
+        : first(a)
+        , second(b)
+    {
+    }
+    friend bool operator<(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) < std::tie(b.first, b.second);
+    }
+    friend bool operator<=(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) <= std::tie(b.first, b.second);
+    }
+    friend bool operator>(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) > std::tie(b.first, b.second);
+    }
+    friend bool operator>=(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) >= std::tie(b.first, b.second);
+    }
+    friend bool operator==(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) == std::tie(b.first, b.second);
+    }
+    friend bool operator!=(const erpair& a, const erpair& b)
+    {
+        return std::tie(a.first, a.second) != std::tie(b.first, b.second);
+    }
+
+    A first{};
+    B second{};
+};
+
+template <typename A, typename B> erpair<A, B> make_erpair(const A& a, const B& b)
+{
+    return erpair<A, B>(a, b);
+}
+
+template <typename T> T endian_reverse(const T& x)
+{
+    return boost::endian::endian_reverse(x);
+}
+
+template <> inline uint128 endian_reverse(const uint128& u)
+{
+    return uint128(boost::endian::endian_reverse(u.hi), boost::endian::endian_reverse(u.lo));
+}
+
+template <typename A, typename B> erpair<A, B> endian_reverse(const erpair<A, B>& p)
+{
+    return make_erpair(endian_reverse(p.first), endian_reverse(p.second));
+}
 
 /**
  *  This class is designed to offer in-place memory allocation of a string up to Length equal to
@@ -11,7 +76,7 @@ namespace fc {
  *  The string will sort according to the comparison operators defined for Storage, this enables efficient
  *  sorting.
  */
-template <typename Storage = std::pair<uint64_t, uint64_t>> class fixed_string
+template <typename Storage = fc::uint128> class fixed_string
 {
 public:
     fixed_string()
@@ -21,39 +86,44 @@ public:
         : data(c.data)
     {
     }
-
+    fixed_string(const char* str)
+        : fixed_string(std::string(str))
+    {
+    }
     fixed_string(const std::string& str)
     {
-        if (str.size() <= sizeof(data))
-            memcpy((char*)&data, str.c_str(), str.size());
+        Storage d;
+        if (str.size() <= sizeof(d))
+            memcpy((char*)&d, str.c_str(), str.size());
         else
-        {
-            memcpy((char*)&data, str.c_str(), sizeof(data));
-        }
-    }
-    fixed_string(const char* str)
-    {
-        auto l = strlen(str);
-        if (l <= sizeof(data))
-            memcpy((char*)&data, str, l);
-        else
-        {
-            memcpy((char*)&data, str, sizeof(data));
-        }
+            memcpy((char*)&d, str.c_str(), sizeof(d));
+
+        data = boost::endian::big_to_native(d);
     }
 
     operator std::string() const
     {
-        const char* self = (const char*)&data;
-        return std::string(self, self + size());
+        Storage d = boost::endian::native_to_big(data);
+        size_t s;
+
+        if (*(((const char*)&d) + sizeof(d) - 1))
+            s = sizeof(d);
+        else
+            s = strnlen((const char*)&d, sizeof(d));
+
+        const char* self = (const char*)&d;
+
+        return std::string(self, self + s);
     }
 
     uint32_t size() const
     {
-        if (*(((const char*)&data) + sizeof(data) - 1))
-            return sizeof(data);
-        return strnlen((const char*)&data, sizeof(data));
+        Storage d = boost::endian::native_to_big(data);
+        if (*(((const char*)&d) + sizeof(d) - 1))
+            return sizeof(d);
+        return strnlen((const char*)&d, sizeof(d));
     }
+
     uint32_t length() const
     {
         return size();
@@ -64,22 +134,16 @@ public:
         data = str.data;
         return *this;
     }
+
     fixed_string& operator=(const char* str)
     {
-        return *this = fixed_string(str);
+        *this = fixed_string(str);
+        return *this;
     }
 
     fixed_string& operator=(const std::string& str)
     {
-        if (str.size() <= sizeof(data))
-        {
-            data = Storage();
-            memcpy((char*)&data, str.c_str(), str.size());
-        }
-        else
-        {
-            memcpy((char*)&data, str.c_str(), sizeof(data));
-        }
+        *this = fixed_string(str);
         return *this;
     }
 
@@ -91,7 +155,6 @@ public:
     {
         return a + std::string(b);
     }
-
     friend bool operator<(const fixed_string& a, const fixed_string& b)
     {
         return a.data < b.data;
@@ -116,67 +179,31 @@ public:
     {
         return a.data != b.data;
     }
-    // private:
+
     Storage data;
 };
 
+// These storage types work with memory layout and should be used instead of a custom template.
+using fixed_string_16 = fixed_string<fc::uint128_t>;
+using fixed_string_24 = fixed_string<fc::erpair<fc::uint128_t, uint64_t>>;
+using fixed_string_32 = fixed_string<fc::erpair<fc::uint128_t, fc::uint128_t>>;
+
 namespace raw {
-template <typename Stream, typename Storage> inline void pack(Stream& s, const fc::fixed_string<Storage>& u)
+
+template <typename Stream, typename Storage> inline void pack(Stream& s, const fixed_string<Storage>& u)
 {
-    unsigned_int size = u.size();
-    pack(s, size);
-    s.write((const char*)&u.data, size);
+    pack(s, std::string(u));
 }
 
-template <typename Stream, typename Storage> inline void unpack(Stream& s, fc::fixed_string<Storage>& u)
+template <typename Stream, typename Storage> inline void unpack(Stream& s, fixed_string<Storage>& u)
 {
-    unsigned_int size;
-    fc::raw::unpack(s, size);
-    if (size.value > 0)
-    {
-        if (size.value > sizeof(Storage))
-        {
-            s.read((char*)&u.data, sizeof(Storage));
-            char buf[1024];
-            size_t left = size.value - sizeof(Storage);
-            while (left >= 1024)
-            {
-                s.read(buf, 1024);
-                left -= 1024;
-            }
-            s.read(buf, left);
-
-            /*
-            s.seekp( s.tellp() + (size.value - sizeof(Storage)) );
-            char tmp;
-            size.value -= sizeof(storage);
-            while( size.value ){ s.read( &tmp, 1 ); --size.value; }
-            */
-            //  s.skip( size.value - sizeof(Storage) );
-        }
-        else
-        {
-            s.read((char*)&u.data, size.value);
-        }
-    }
+    std::string str;
+    unpack(s, str);
+    u = str;
 }
 
-/*
-template<typename Stream, typename... Args>
-inline void pack( Stream& s, const boost::multiprecision::number<Args...>& d ) {
-   s.write( (const char*)&d, sizeof(d) );
-}
-
-template<typename Stream, typename... Args>
-inline void unpack( Stream& s, boost::multiprecision::number<Args...>& u ) {
-   s.read( (const char*)&u, sizeof(u) );
-}
-*/
 } // namespace raw
-} // namespace fc
 
-#include <fc/variant.hpp>
-namespace fc {
 template <typename Storage> void to_variant(const fixed_string<Storage>& s, variant& v)
 {
     v = std::string(s);

@@ -19,6 +19,8 @@ namespace fc {
  */
 template <typename T> struct safe
 {
+    using value_type = T;
+
     T value = 0;
 
     template <typename O>

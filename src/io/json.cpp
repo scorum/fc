@@ -154,11 +154,11 @@ namespace fc
          }
          return token.str();
       }
-      catch( const fc::eof_exception& eof )
+      catch( const fc::eof_exception& )
       {
          return token.str();
       }
-      catch (const std::ios_base::failure&)
+      catch ( const std::ios_base::failure& )
       {
          return token.str();
       }
@@ -869,7 +869,7 @@ namespace fc
           default:
               FC_ASSERT( false, "Unknown JSON parser type {ptype}", ("ptype", ptype) );
       }
-      try { in.peek(); } catch ( const eof_exception& e ) { return true; }
+      try { in.peek(); } catch ( const eof_exception& ) { return true; }
       return false;
    }
 

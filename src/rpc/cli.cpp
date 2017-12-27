@@ -97,7 +97,7 @@ void cli::run()
          {
             getline( _prompt.c_str(), line );
          }
-         catch ( const fc::eof_exception& e )
+         catch ( const fc::eof_exception& )
          {
             break;
          }

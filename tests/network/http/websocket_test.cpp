@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(websocket_test)
             c_conn->send_message( "again" );
             BOOST_FAIL("expected assertion failure");
         } catch (const fc::assert_exception& e) {
-            //std::cerr << e.to_string() << "\n";
+            std::cerr << e.to_string() << "\n";
         }
 
         c_conn = client.connect( "ws://localhost:8090" );

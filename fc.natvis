@@ -50,7 +50,7 @@
 <Type Name="fc::path">
 	<DisplayString>{_p}</DisplayString>
 	<Expand>
-		<ExpandedItem>_p</ExpandedItem>
+		<ExpandedItem>*_p</ExpandedItem>
 	</Expand>
 </Type>
 

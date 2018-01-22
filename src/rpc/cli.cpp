@@ -118,6 +118,7 @@ void cli::run()
          else
             std::cout << itr->second( result, args ) << "\n";
       }
+      catch ( fc::canceled_exception& ){} // expected exception
       catch ( const fc::exception& e )
       {
          std::cout << e.to_detail_string() << "\n";

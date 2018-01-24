@@ -173,7 +173,7 @@ template<> struct reflector<ENUM> { \
         return from_int(i); \
     } \
     template< typename Visitor > \
-    static void visit( Visitor& v ) \
+    static void visit( const Visitor& v ) \
     { \
         BOOST_PP_SEQ_FOR_EACH( FC_REFLECT_VISIT_ENUM, ENUM, FIELDS ) \
     } \

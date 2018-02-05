@@ -1,22 +1,12 @@
 #pragma once
 
-#include <boost/interprocess/containers/vector.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
-
 #include <fc/io/raw_fwd.hpp>
 #include <fc/variant.hpp>
+#include <fc/shared_containers.hpp>
 
 namespace fc {
 
-    namespace bip = boost::interprocess;
-
-    template <typename T> 
-    using allocator = bip::allocator<T, bip::managed_mapped_file::segment_manager>;
-
-    template <typename T> 
-    using shared_vector = std::vector<T, allocator<T>>;
-
-    using shared_buffer = bip::vector<char, allocator<char>>;
+    using shared_buffer = shared_vector<char>;
 
 namespace raw {
 
@@ -44,4 +34,5 @@ namespace raw {
 
 } // namespace raw
 } // namespace fc
+
 

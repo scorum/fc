@@ -1,20 +1,17 @@
 #pragma once
 
-#include <boost/interprocess/containers/string.hpp>
-#include <boost/interprocess/managed_mapped_file.hpp>
-
+#include <boost/container/string.hpp>
+#include <fc/shared_allocator.hpp>
 #include <fc/io/raw_fwd.hpp>
 #include <fc/variant.hpp>
 
 namespace fc {
 
-    namespace bip = boost::interprocess;
-
     /* 
     *  shared_string is a string type placeable in shared memory,
     *  courtesy of Boost.Interprocess.
     */
-    using shared_string = bip::basic_string<char, std::char_traits<char>, bip::allocator<char, bip::managed_mapped_file::segment_manager>>;
+    using shared_string = boost::container::basic_string<char, std::char_traits<char>, shared_allocator<char>>;
 
     struct strcmp_less
     {
@@ -61,3 +58,4 @@ namespace fc {
         s.assign(str.begin(), str.end());
     }
 }
+

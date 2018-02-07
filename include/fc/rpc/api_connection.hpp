@@ -220,9 +220,22 @@ namespace fc {
          }
   
          /** makes calls to the remote server */
-         virtual variant send_call( api_id_type api_id, string method_name, variants args = variants() ) = 0;
-         virtual variant send_callback( uint64_t callback_id, variants args = variants() ) = 0;
-         virtual void    send_notice( uint64_t callback_id, variants args = variants() ) = 0;
+         virtual variant send_call(api_id_type api_id, string method_name, variants args = variants())
+         {
+             FC_ASSERT(false, "Not implemented.");
+
+             return variant();
+         }
+         virtual variant send_callback(uint64_t callback_id, variants args = variants())
+         {
+             FC_ASSERT(false, "Not implemented.");
+
+             return variant();
+         }
+         virtual void send_notice(uint64_t callback_id, variants args = variants())
+         {
+             FC_ASSERT(false, "Not implemented.");
+         }
 
          variant receive_call( api_id_type api_id, const string& method_name, const variants& args = variants() )const
          {

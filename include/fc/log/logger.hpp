@@ -43,12 +43,10 @@ namespace fc
          void  set_name( const fc::string& n );
          const fc::string& name()const;
 
-         void add_appender( const fc::shared_ptr<appender>& a );
-         std::vector<fc::shared_ptr<appender> > get_appenders()const;
-         void remove_appender( const fc::shared_ptr<appender>& a );
+         void add_appender( const log_level& log_level, const fc::shared_ptr<appender>& a );
 
          bool is_enabled( log_level e )const;
-         void log( log_message m );
+         void log( const log_level& log_level, log_message m );
 
       private:
          class impl;
@@ -77,31 +75,31 @@ namespace fc
 #define fc_dlog( LOGGER, FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (LOGGER).is_enabled( fc::log_level::debug ) ) \
-      (LOGGER).log( FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
+      (LOGGER).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define fc_ilog( LOGGER, FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (LOGGER).is_enabled( fc::log_level::info ) ) \
-      (LOGGER).log( FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
+      (LOGGER).log( fc::log_level::info, FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define fc_wlog( LOGGER, FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (LOGGER).is_enabled( fc::log_level::warn ) ) \
-      (LOGGER).log( FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
+      (LOGGER).log( fc::log_level::warn, FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define fc_elog( LOGGER, FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (LOGGER).is_enabled( fc::log_level::error ) ) \
-      (LOGGER).log( FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
+      (LOGGER).log( fc::log_level::error, FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define dlog( FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::debug ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
+      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 /**
@@ -111,26 +109,26 @@ namespace fc
 #define ulog( FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (fc::logger::get("user")).is_enabled( fc::log_level::debug ) ) \
-      (fc::logger::get("user")).log( FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
+      (fc::logger::get("user")).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 
 #define ilog( FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::info ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
+      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::info, FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define wlog( FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::warn ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
+      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::warn, FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #define elog( FORMAT, ... ) \
   FC_MULTILINE_MACRO_BEGIN \
    if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::error ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
+      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::error, FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
   FC_MULTILINE_MACRO_END
 
 #include <boost/preprocessor/seq/for_each.hpp>

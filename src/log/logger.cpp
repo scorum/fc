@@ -97,7 +97,12 @@ namespace fc {
     logger& logger::set_parent(const logger& p) { my->_parent = p; return *this; }
 
     log_level logger::get_log_level()const { return my->_level; }
-    logger& logger::set_log_level(log_level ll) { my->_level = ll; return *this; }
+    logger& logger::set_log_level(log_level ll)
+    {
+        if (ll < my->_level)
+            my->_level = ll;
+        return *this;
+    }
 
     void logger::add_appender(const log_level& log_level, const fc::shared_ptr<appender>& a)
     {

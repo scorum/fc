@@ -21,7 +21,7 @@ namespace fc {
          bool             _additivity;
          log_level        _level;
 
-         std::vector<appender::ptr> _appenders;
+        std::map<log_level::values, std::vector<appender::ptr>, std::greater<log_level::values>> _appenders;
     };
 
 
@@ -61,15 +61,18 @@ namespace fc {
        return e >= my->_level;
     }
 
-    void logger::log( log_message m ) {
-       m.get_context().append_context( my->_name );
+    void logger::log(const log_level& log_level, log_message m) {
+        m.get_context().append_context(my->_name);
 
-       for( auto itr = my->_appenders.begin(); itr != my->_appenders.end(); ++itr )
-          (*itr)->log( m );
+        auto most_strong_suitable_level_it = my->_appenders.lower_bound(log_level.value);
+        for (auto it = most_strong_suitable_level_it; it != my->_appenders.end(); ++it)
+            for (const auto& appender : it->second)
+                appender->log(m);
 
-       if( my->_additivity && my->_parent != nullptr) {
-          my->_parent.log(m);
-       }
+        if (my->_additivity && my->_parent != nullptr)
+        {
+            my->_parent.log(log_level, m);
+        }
     }
     void logger::set_name( const fc::string& n ) { my->_name = n; }
     const fc::string& logger::name()const { return my->_name; }
@@ -94,17 +97,16 @@ namespace fc {
     logger& logger::set_parent(const logger& p) { my->_parent = p; return *this; }
 
     log_level logger::get_log_level()const { return my->_level; }
-    logger& logger::set_log_level(log_level ll) { my->_level = ll; return *this; }
-
-    void logger::add_appender( const fc::shared_ptr<appender>& a )
-    { my->_appenders.push_back(a); }
-    
-//    void logger::remove_appender( const fc::shared_ptr<appender>& a )
- //   { my->_appenders.erase(a); }
-
-    std::vector<fc::shared_ptr<appender> > logger::get_appenders()const
+    logger& logger::set_log_level(log_level ll)
     {
-        return my->_appenders;
+        if (ll < my->_level)
+            my->_level = ll;
+        return *this;
+    }
+
+    void logger::add_appender(const log_level& log_level, const fc::shared_ptr<appender>& a)
+    {
+        my->_appenders[log_level.value].push_back(a);
     }
 
    bool configure_logging( const logging_config& cfg );

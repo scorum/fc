@@ -40,7 +40,7 @@ namespace fc
          log_level( values v = off ):value(v){}
          explicit log_level( int v ):value( static_cast<values>(v)){}
          operator int()const { return value; }
-         values value;
+         values value = log_level::off;
    };
 
    void to_variant( log_level e, variant& v );

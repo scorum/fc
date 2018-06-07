@@ -62,7 +62,6 @@ namespace fc {
     }
 
     void logger::log(const log_level& log_level, log_message m) {
-        m.get_context().append_context(my->_name);
 
         auto most_strong_suitable_level_it = my->_appenders.lower_bound(log_level.value);
         for (auto it = most_strong_suitable_level_it; it != my->_appenders.end(); ++it)

@@ -81,11 +81,12 @@ namespace fc
 
    }
 
-   void log_context::append_context( const fc::string& s )
+   log_context &log_context::append_context( const fc::string& s )
    {
         if (!my->context.empty())
           my->context += " -> ";
         my->context += s;
+        return *this;
    }
 
    log_context::~log_context(){}

@@ -180,6 +180,11 @@ namespace fc {
       }
 
       line << "] ";
+      const std::string& context_str = m.get_context().get_context();
+      if (!context_str.empty())
+      {
+          line << "(" << context_str << ") ";
+      }
       fc::string message = fc::format_string( m.get_format(), m.get_data() );
       line << message.c_str();
 

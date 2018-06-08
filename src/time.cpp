@@ -46,7 +46,9 @@ namespace fc {
 
   time_point::operator fc::string()const
   {
-      return fc::string( time_point_sec( *this ) );
+      const auto sec = sec_since_epoch();
+      const auto ptime = boost::posix_time::from_time_t(time_t(sec)) + boost::posix_time::microseconds(elapsed.count() % sec);
+      return boost::posix_time::to_iso_extended_string(ptime);  
   }
 
   time_point time_point::from_iso_string( const fc::string& s )

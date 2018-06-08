@@ -74,7 +74,7 @@ namespace fc
         log_level     get_log_level()const;
         string        get_context()const;
 
-        void          append_context( const fc::string& c );
+        log_context&  append_context( const fc::string& c );
 
         string        to_string()const;
       private:
@@ -160,3 +160,6 @@ FC_REFLECT_TYPENAME( fc::log_message );
 #define FC_LOG_MESSAGE( LOG_LEVEL, FORMAT, ... ) \
    fc::log_message( FC_LOG_CONTEXT(LOG_LEVEL), FORMAT, fc::mutable_variant_object()__VA_ARGS__ )
 
+//FC_LOG_CONTEXT with context string
+#define FC_LOG_CTX_MESSAGE( LOG_LEVEL, CTX, FORMAT, ... ) \
+   fc::log_message( FC_LOG_CONTEXT(LOG_LEVEL).append_context(CTX), FORMAT, fc::mutable_variant_object()__VA_ARGS__ )

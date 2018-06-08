@@ -72,64 +72,75 @@ namespace fc
 # define FC_MULTILINE_MACRO_END  } while (0)
 #endif
 
-#define fc_dlog( LOGGER, FORMAT, ... ) \
+#define FC_NAMED_LOG( LOGGER, LEVEL, OUTPUT ) \
   FC_MULTILINE_MACRO_BEGIN \
-   if( (LOGGER).is_enabled( fc::log_level::debug ) ) \
-      (LOGGER).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
+   if( (LOGGER).is_enabled( LEVEL ) ) \
+      (LOGGER).log( LEVEL, OUTPUT ); \
   FC_MULTILINE_MACRO_END
+
+#define FC_DEFAULT_LOG( LOGGER, LEVEL, OUTPUT ) \
+    FC_NAMED_LOG(fc::logger::get(DEFAULT_LOGGER), LEVEL, OUTPUT)
+
+#define FC_NAMED_LOG_FORMATED( LOGGER, LEVEL, FORMAT, ... ) \
+    FC_NAMED_LOG(LOGGER, fc::log_level::LEVEL, FC_LOG_MESSAGE(LEVEL, FORMAT, __VA_ARGS__))
+
+#define FC_NAMED_LOG_CTX_FORMATED( LOGGER, LEVEL, CTX, FORMAT, ... ) \
+    FC_NAMED_LOG(LOGGER, fc::log_level::LEVEL, FC_LOG_CTX_MESSAGE(LEVEL, CTX, FORMAT, __VA_ARGS__))
+
+#define fc_dlog( LOGGER, FORMAT, ... ) \
+    FC_NAMED_LOG_FORMATED(LOGGER, debug, FORMAT, __VA_ARGS__)
 
 #define fc_ilog( LOGGER, FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (LOGGER).is_enabled( fc::log_level::info ) ) \
-      (LOGGER).log( fc::log_level::info, FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
+    FC_NAMED_LOG_FORMATED(LOGGER, info, FORMAT, __VA_ARGS__)
 
 #define fc_wlog( LOGGER, FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (LOGGER).is_enabled( fc::log_level::warn ) ) \
-      (LOGGER).log( fc::log_level::warn, FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
+    FC_NAMED_LOG_FORMATED(LOGGER, warn, FORMAT, __VA_ARGS__)
 
 #define fc_elog( LOGGER, FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (LOGGER).is_enabled( fc::log_level::error ) ) \
-      (LOGGER).log( fc::log_level::error, FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
+    FC_NAMED_LOG_FORMATED(LOGGER, error, FORMAT, __VA_ARGS__)
+
+#define fc_ctx_dlog( LOGGER, CTX, FORMAT, ... ) \
+    FC_NAMED_LOG_CTX_FORMATED(LOGGER, debug, CTX, FORMAT, __VA_ARGS__)
+
+#define fc_ctx_ilog( LOGGER, CTX, FORMAT, ... ) \
+    FC_NAMED_LOG_CTX_FORMATED(LOGGER, info, CTX, FORMAT, __VA_ARGS__)
+
+#define fc_ctx_wlog( LOGGER, CTX, FORMAT, ... ) \
+    FC_NAMED_LOG_CTX_FORMATED(LOGGER, warn, CTX, FORMAT, __VA_ARGS__)
+
+#define fc_ctx_elog( LOGGER, CTX, FORMAT, ... ) \
+    FC_NAMED_LOG_CTX_FORMATED(LOGGER, error, CTX, FORMAT, __VA_ARGS__)
 
 #define dlog( FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::debug ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
+    fc_dlog(fc::logger::get(DEFAULT_LOGGER), FORMAT, __VA_ARGS__)
+
+#define ilog( FORMAT, ... ) \
+    fc_ilog(fc::logger::get(DEFAULT_LOGGER), FORMAT, __VA_ARGS__)
+
+#define wlog( FORMAT, ... ) \
+    fc_wlog(fc::logger::get(DEFAULT_LOGGER), FORMAT, __VA_ARGS__)
+
+#define elog( FORMAT, ... ) \
+    fc_elog(fc::logger::get(DEFAULT_LOGGER), FORMAT, __VA_ARGS__)
+
+#define ctx_dlog( CTX, FORMAT, ... ) \
+    fc_ctx_dlog(fc::logger::get(DEFAULT_LOGGER), CTX, FORMAT, __VA_ARGS__)
+
+#define ctx_ilog( CTX, FORMAT, ... ) \
+    fc_ctx_ilog(fc::logger::get(DEFAULT_LOGGER), CTX, FORMAT, __VA_ARGS__)
+
+#define ctx_wlog( CTX, FORMAT, ... ) \
+    fc_ctx_wlog(fc::logger::get(DEFAULT_LOGGER), CTX, FORMAT, __VA_ARGS__)
+
+#define ctx_elog( CTX, FORMAT, ... ) \
+    fc_ctx_elog(fc::logger::get(DEFAULT_LOGGER), CTX, FORMAT, __VA_ARGS__)
 
 /**
  * Sends the log message to a special 'user' log stream designed for messages that
  * the end user may like to see.
  */
 #define ulog( FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (fc::logger::get("user")).is_enabled( fc::log_level::debug ) ) \
-      (fc::logger::get("user")).log( fc::log_level::debug, FC_LOG_MESSAGE( debug, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
-
-
-#define ilog( FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::info ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::info, FC_LOG_MESSAGE( info, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
-
-#define wlog( FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::warn ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::warn, FC_LOG_MESSAGE( warn, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
-
-#define elog( FORMAT, ... ) \
-  FC_MULTILINE_MACRO_BEGIN \
-   if( (fc::logger::get(DEFAULT_LOGGER)).is_enabled( fc::log_level::error ) ) \
-      (fc::logger::get(DEFAULT_LOGGER)).log( fc::log_level::error, FC_LOG_MESSAGE( error, FORMAT, __VA_ARGS__ ) ); \
-  FC_MULTILINE_MACRO_END
+    fc_dlog(fc::logger::get("user"), FORMAT, __VA_ARGS__)
 
 #include <boost/preprocessor/seq/for_each.hpp>
 #include <boost/preprocessor/seq/enum.hpp>

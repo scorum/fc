@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <typeinfo>
 #include <fc/exception/exception.hpp>
+#include <fc/static_variant_visitor.hpp>
 
 namespace fc {
 
@@ -305,6 +306,7 @@ public:
             FC_THROW_EXCEPTION( fc::assert_exception, "static_variant does not contain a value of type ${t}", ("t",fc::get_typename<X>::name()) );
         }
     }
+
     template<typename visitor>
     typename visitor::result_type visit(visitor& v) {
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
@@ -324,6 +326,34 @@ public:
     typename visitor::result_type visit(const visitor& v)const {
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     }
+
+    /// This will ignore variants which wasn't matched
+    template<typename TF, typename... TFs>
+    void weak_visit(TF&& functor, TFs&&... functors)
+    {
+        visit(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+    };
+
+    /// This won't compile if there are variants which wasn't matched
+    template<typename TF, typename... TFs>
+    void weak_visit(TF&& functor, TFs&&... functors) const
+    {
+        visit(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+    };
+
+    /// This won't compile if there are variants which wasn't matched
+    template<typename TF, typename... TFs>
+    void strict_visit(TF&& functor, TFs&&... functors)
+    {
+        visit(make_strict_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+    };
+
+    /// This won't compile if there are variants which wasn't matched
+    template<typename TF, typename... TFs>
+    void strict_visit(TF&& functor, TFs&&... functors) const
+    {
+        visit(make_strict_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+    };
 
     static int count() { return impl::type_info<Types...>::count; }
     void set_which( int w ) {

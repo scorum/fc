@@ -48,6 +48,10 @@ template <typename T> struct weak_visitor<T> : T
 {
     using result_type = void;
     using T::operator();
+    /**
+     * This is the only difference between 'strict_visitor' and 'weak_visitor'.
+     * 'weak_visitor' will call this template if it obtains variant which doesn't match any of the provided functors.
+     */
     template <typename U> void operator()(const U&) const {}
 
     template <typename U>

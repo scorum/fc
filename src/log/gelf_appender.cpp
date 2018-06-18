@@ -93,7 +93,7 @@ namespace fc
 
     mutable_variant_object gelf_message;
     gelf_message["version"] = "1.1";
-    gelf_message["host"] = my->cfg.host;
+    //gelf_message["host"] = my->cfg.host;
     gelf_message["short_message"] = format_string(message.get_format(), message.get_data());
     
     gelf_message["timestamp"] = context.get_timestamp().time_since_epoch().count() / 1000000.;
@@ -101,6 +101,7 @@ namespace fc
     switch (context.get_log_level())
     {
     case log_level::debug:
+    case log_level::all:
       gelf_message["level"] = 7; // debug
       break;
     case log_level::info:
@@ -112,11 +113,9 @@ namespace fc
     case log_level::error:
       gelf_message["level"] = 3; // error
       break;
-    case log_level::all:
     case log_level::off:
       // these shouldn't be used in log messages, but do something deterministic just in case
-      gelf_message["level"] = 6; // info
-      break;
+      return; // log nothing
     }
 
     if (!context.get_context().empty())

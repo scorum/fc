@@ -23,6 +23,7 @@ namespace fc
    {
       public:
          static logger get( const fc::string& name = "default");
+         static void   clear_all();
 
          logger();
          logger( const string& name, const logger& parent = nullptr );

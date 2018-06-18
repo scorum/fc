@@ -1,6 +1,7 @@
 #pragma once
 #include <fc/shared_ptr.hpp>
 #include <fc/string.hpp>
+#include <typeindex>
 
 namespace fc {
    class appender;
@@ -30,14 +31,18 @@ namespace fc {
          typedef fc::shared_ptr<appender> ptr;
 
          template<typename T>
-         static bool register_appender(const fc::string& type) {
-            return register_appender( type, new detail::appender_factory_impl<T>() );
+         static bool create_appender_factory() {
+            return register_factory(typeid(T), new detail::appender_factory_impl<T>() );
          }
 
-         static appender::ptr create( const fc::string& name, const fc::string& type, const variant& args  );
+         static appender::ptr create( const fc::string& name, const std::type_index&, const variant& args  );
          static appender::ptr get( const fc::string& name );
-         static bool          register_appender( const fc::string& type, const appender_factory::ptr& f );
+         static void          clear_all();
 
          virtual void log( const log_message& m ) = 0;
+
+      private:
+         static bool register_factory(const std::type_index&, const appender_factory::ptr& f);
    };
 }
+

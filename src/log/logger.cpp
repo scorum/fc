@@ -7,7 +7,6 @@
 #include <fc/filesystem.hpp>
 #include <unordered_map>
 #include <string>
-#include <fc/log/logger_config.hpp>
 
 namespace fc {
 
@@ -76,20 +75,21 @@ namespace fc {
     void logger::set_name( const fc::string& n ) { my->_name = n; }
     const fc::string& logger::name()const { return my->_name; }
 
-    extern bool do_default_config;
-
     std::unordered_map<std::string,logger>& get_logger_map() {
-      static bool force_link_default_config = fc::do_default_config;
       //TODO: Atomic compare/swap set
-      static std::unordered_map<std::string,logger>* lm = new std::unordered_map<std::string, logger>();
-      (void)force_link_default_config; // hide warning;
-      return *lm;
+      static std::unordered_map<std::string,logger> lm;
+      return lm;
     }
 
     logger logger::get( const fc::string& s ) {
        static fc::spin_lock logger_spinlock;
        scoped_lock<spin_lock> lock(logger_spinlock);
        return get_logger_map()[s];
+    }
+
+    void logger::clear_all()
+    {
+        get_logger_map().clear();
     }
 
     logger  logger::get_parent()const { return my->_parent; }
@@ -107,8 +107,5 @@ namespace fc {
     {
         my->_appenders[log_level.value].push_back(a);
     }
-
-   bool configure_logging( const logging_config& cfg );
-   bool do_default_config      = configure_logging( logging_config::default_config() );
 
 } // namespace fc

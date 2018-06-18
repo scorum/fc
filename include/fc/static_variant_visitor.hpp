@@ -1,11 +1,46 @@
 #pragma once
 
+#include <fc/functor_traits.hpp>
+
 namespace fc {
 namespace impl {
+namespace cxx17 {
+    template<class...>
+    using void_t = void;
+}
+
+template<typename TF, typename = impl::cxx17::void_t<>>
+struct has_result_type : std::false_type
+{ };
+
+template<typename TF>
+struct has_result_type<TF, impl::cxx17::void_t<typename std::decay<TF>::type::result_type>> : std::true_type
+{ };
+
 /**
- * This won't compile if where are variants which weren't matched.
- * Functor or lambda is just a struct with operator(). So build a visitor by inheriting from all such functors.
- * As a result we will get a struct with each required operator()(...)
+ * If 'T' functor doesn't have result_type which is required by fc::static_variant visitors (it is a lambda for example)
+ * then declare it
+ */
+template<typename T, typename = cxx17::void_t<>>
+struct result_type_declaration
+{
+    using result_type = typename functor_traits<T>::return_type;
+};
+
+/**
+ * If it does then DO NOT declare it
+ */
+template<typename T>
+struct result_type_declaration<T, cxx17::void_t<typename T::result_type>>
+{ };
+
+/**
+ * 'strict' visitor requires all variants provided in functor(s) when you are calling 'variant.visit([functor(s)/lambdas])'
+ *
+ * 'T' and 'Ts' here are functor(s) or lambdas (lambda is just a struct with operator() i.e. also functor).
+ *
+ * In C++17 this code can be dramatically simplified cuz there we have pack-expansion in using-declarations,
+ * i.e. using Ts::operator()...;
  */
 template <typename T, typename... Ts> struct strict_visitor : T, strict_visitor<Ts...>
 {
@@ -18,9 +53,8 @@ template <typename T, typename... Ts> struct strict_visitor : T, strict_visitor<
         , strict_visitor<Ts...>(std::forward<Us>(fs)...) { }
 };
 
-template <typename T> struct strict_visitor<T> : T
+template <typename T> struct strict_visitor<T> : T, result_type_declaration<T>
 {
-    using result_type = void;
     using T::operator();
 
     template <typename U>
@@ -29,9 +63,12 @@ template <typename T> struct strict_visitor<T> : T
 };
 
 /**
- * This will ignore variants which weren't matched.
- * Functor or lambda is just a struct with operator(). So build a visitor by inheriting from all such functors.
- * As a result we will get a struct with each required operator()(...)
+ * 'weak' visitor DO NOT require all variants provided in functor when you are calling 'variant.visit([functor/lambdas])'
+ *
+ * 'T' and 'Ts' here are functor(s) or lambdas (lambda is just a struct with operator() i.e. also functor).
+ *
+ * In C++17 this code can be dramatically simplified cuz there we have pack-expansion in using-declarations,
+ * i.e. using Ts::operator()...;
  */
 template <typename T, typename... Ts> struct weak_visitor : T, weak_visitor<Ts...>
 {
@@ -44,9 +81,8 @@ template <typename T, typename... Ts> struct weak_visitor : T, weak_visitor<Ts..
         , weak_visitor<Ts...>(std::forward<Us>(fs)...) { }
 };
 
-template <typename T> struct weak_visitor<T> : T
+template <typename T> struct weak_visitor<T> : T, result_type_declaration<T>
 {
-    using result_type = void;
     using T::operator();
     /**
      * This is the only difference between 'strict_visitor' and 'weak_visitor'.
@@ -61,14 +97,14 @@ template <typename T> struct weak_visitor<T> : T
 }
 
 template <typename T, typename... Ts> auto make_strict_visitor(T&& f, Ts&&... fs)
-    -> decltype(impl::strict_visitor<T, Ts...>(std::forward<T>(f), std::forward<Ts>(fs)...))
+    -> decltype(impl::strict_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...))
 {
-    return impl::strict_visitor<T, Ts...>(std::forward<T>(f), std::forward<Ts>(fs)...);
+    return impl::strict_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...);
 }
 
 template <typename T, typename... Ts> auto make_weak_visitor(T&& f, Ts&&... fs)
-    -> decltype(impl::weak_visitor<T, Ts...>(std::forward<T>(f), std::forward<Ts>(fs)...))
+    -> decltype(impl::weak_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...))
 {
-    return impl::weak_visitor<T, Ts...>(std::forward<T>(f), std::forward<Ts>(fs)...);
+    return impl::weak_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...);
 }
 }

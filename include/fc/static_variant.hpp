@@ -307,52 +307,75 @@ public:
         }
     }
 
-    template<typename visitor>
-    typename visitor::result_type visit(visitor& v) {
+    /**
+     * These overloads should be used when you are passing functor object with all required operator()(...)
+     *
+     * NOTE: No copy/move will be performed
+     */
+    template<typename visitor, typename = typename std::enable_if<impl::has_result_type<visitor>::value>::type>
+    typename std::decay<visitor>::type::result_type visit(visitor&& v)const {
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     }
 
-    template<typename visitor>
-    typename visitor::result_type visit(const visitor& v) {
+    template<typename visitor, typename = typename std::enable_if<impl::has_result_type<visitor>::value>::type>
+    typename std::decay<visitor>::type::result_type visit(visitor&& v) {
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     }
 
-    template<typename visitor>
-    typename visitor::result_type visit(visitor& v)const {
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
-    }
-
-    template<typename visitor>
-    typename visitor::result_type visit(const visitor& v)const {
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
-    }
-
-    /// This will ignore variants which wasn't matched
+    /**
+     * You can pass multiple functors where each one handle particular variant in fc::static_variant
+     *
+     * NOTE: All these functors will be copied/moved in order to construct visitor.
+     */
     template<typename TF, typename... TFs>
-    void weak_visit(TF&& functor, TFs&&... functors)
+    auto visit(TF&& f, TFs&&... fs) ->
+        typename std::enable_if<sizeof...(TFs) != 0 || !impl::has_result_type<TF>::value,
+            typename decltype(make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...))::result_type
+        >::type
     {
-        visit(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+        auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
+        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     };
 
-    /// This won't compile if there are variants which wasn't matched
+    /**
+     * You can pass multiple functors where each one handle particular variant in fc::static_variant
+     *
+     * NOTE: All these functors will be copied/moved in order to construct visitor.
+     */
     template<typename TF, typename... TFs>
-    void weak_visit(TF&& functor, TFs&&... functors) const
+    auto visit(TF&& f, TFs&&... fs) const ->
+        typename std::enable_if<sizeof...(TFs) != 0 || !impl::has_result_type<TF>::value,
+            typename decltype(make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...))::result_type
+        >::type
     {
-        visit(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+        auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
+        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     };
 
-    /// This won't compile if there are variants which wasn't matched
+    /**
+     * Created visitor can match only the subset of 'fc::static_variant's variants. The rest will be ignored.
+     *
+     * NOTE: All these functors will be copied/moved in order to construct visitor.
+     */
     template<typename TF, typename... TFs>
-    void strict_visit(TF&& functor, TFs&&... functors)
+    auto weak_visit(TF&& functor, TFs&&... functors) ->
+        typename decltype(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...))::result_type
     {
-        visit(make_strict_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+        auto v = make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...);
+        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     };
 
-    /// This won't compile if there are variants which wasn't matched
+    /**
+     * Created visitor can match only the subset of 'fc::static_variant's variants. The rest will be ignored.
+     *
+     * NOTE: All these functors will be copied/moved in order to construct visitor.
+     */
     template<typename TF, typename... TFs>
-    void strict_visit(TF&& functor, TFs&&... functors) const
+    auto weak_visit(TF&& functor, TFs&&... functors) const ->
+        typename decltype(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...))::result_type
     {
-        visit(make_strict_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...));
+        auto v = make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...);
+        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
     };
 
     static int count() { return impl::type_info<Types...>::count; }

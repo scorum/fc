@@ -16,6 +16,7 @@ namespace fc
       string endpoint = "127.0.0.1:12201";
       string host_name = "fc"; // the name of the host, source or application that sent this message (just passed through to GELF server)
       string additional_info;
+      string version;
     };
 
     gelf_appender(const variant& args);
@@ -30,4 +31,4 @@ namespace fc
 
 #include <fc/reflect/reflect.hpp>
 FC_REFLECT(fc::gelf_appender::config,
-           (endpoint)(host_name)(additional_info))
+           (endpoint)(host_name)(additional_info)(version))

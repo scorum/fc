@@ -41,6 +41,9 @@ namespace fc {
 
          virtual void log( const log_message& m ) = 0;
 
+      protected:
+          std::string default_format( const log_message& m );
+
       private:
          static bool register_factory(const std::type_index&, const appender_factory::ptr& f);
    };

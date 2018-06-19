@@ -6,9 +6,8 @@
 #include <fc/thread/thread.hpp>
 #include <fc/variant.hpp>
 #include <boost/thread/mutex.hpp>
-#include <iomanip>
+
 #include <queue>
-#include <sstream>
 
 namespace fc {
 
@@ -37,9 +36,6 @@ namespace fc {
              {
                  FC_ASSERT( cfg.rotation_interval >= seconds( 1 ) );
                  FC_ASSERT( cfg.rotation_limit >= cfg.rotation_interval );
-
-
-
 
                  _rotation_task = async( [this]() { rotate_files( true ); }, "rotate_files(1)" );
              }
@@ -156,48 +152,12 @@ namespace fc {
 
    file_appender::~file_appender(){}
 
-   // MS THREAD METHOD  MESSAGE \t\t\t File:Line
    void file_appender::log( const log_message& m )
    {
-      std::stringstream line;
-      //line << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 <<"ms ";
-      line << string(m.get_context().get_timestamp()) << " ";
-      line << std::setw( 21 ) << (m.get_context().get_thread_name().substr(0,9) + string(":") + m.get_context().get_task_name()).c_str() << " ";
-
-      string method_name = m.get_context().get_method();
-      // strip all leading scopes...
-      if( method_name.size() )
-      {
-         uint32_t p = 0;
-         for( uint32_t i = 0;i < method_name.size(); ++i )
-         {
-             if( method_name[i] == ':' ) p = i;
-         }
-
-         if( method_name[p] == ':' )
-           ++p;
-         line << std::setw( 20 ) << m.get_context().get_method().substr(p,20).c_str() <<" ";
-      }
-
-      line << "] ";
-      const std::string& context_str = m.get_context().get_context();
-      if (!context_str.empty())
-      {
-          line << "(" << context_str << ") ";
-      }
-      fc::string message = fc::format_string( m.get_format(), m.get_data() );
-      line << message.c_str();
-
-      //fc::variant lmsg(m);
-
-      // fc::string fmt_str = fc::format_string( my->cfg.format, mutable_variant_object(m.get_context())( "message", message)  );
-
-      {
-        fc::scoped_lock<boost::mutex> lock( my->slock );
-        my->out << line.str() << "\t\t\t" << m.get_context().get_file() << ":" << m.get_context().get_line_number() << "\n";
-        if( my->cfg.flush )
-          my->out.flush();
-      }
+       fc::scoped_lock<boost::mutex> lock(my->slock);
+       my->out << default_format(m);
+       if (my->cfg.flush)
+           my->out.flush();
    }
 
 } // fc

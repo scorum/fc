@@ -187,6 +187,9 @@ public:
 using fixed_string_16 = fixed_string<fc::uint128_t>;
 using fixed_string_24 = fixed_string<fc::erpair<fc::uint128_t, uint64_t>>;
 using fixed_string_32 = fixed_string<fc::erpair<fc::uint128_t, fc::uint128_t>>;
+using uint256_t = fc::erpair<fc::uint128_t, fc::uint128_t>;
+using uint512_t = fc::erpair<uint256_t, uint256_t>;
+using fixed_utf8_string_24 = fixed_string<fc::erpair<uint256_t, uint512_t>>; //768 bits = 4bytes x 24
 
 namespace raw {
 

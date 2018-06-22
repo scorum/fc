@@ -28,25 +28,16 @@ bool logging_config::configure_logging(const logging_config& cfg)
             // TODO... process enabled
         }
 
-        std::vector<logger_config> loggers;
-        boost::algorithm::copy_if(cfg.loggers, std::back_inserter(loggers), [](const logger_config& lhs) { return lhs.level.valid(); });
-
-        for (size_t i = 0; i < loggers.size(); ++i)
+        for (size_t i = 0; i < cfg.loggers.size(); ++i)
         {
-            const auto& logger_cfg = loggers[i];
+            const auto& logger_cfg = cfg.loggers[i];
             auto logger = logger::get(logger_cfg.name);
-            logger.set_name(logger_cfg.name);
-            logger.set_log_level(*logger_cfg.level);
-            if (logger_cfg.parent.valid())
-            {
-                logger.set_parent(logger::get(*logger_cfg.parent));
-            }
             for (const auto& appender_name : logger_cfg.appenders)
             {
                 auto appender = appender::get(appender_name);
                 if (appender)
                 {
-                    logger.add_appender(*logger_cfg.level, appender);
+                    logger.add_appender(logger_cfg.level, appender);
                 }
             }
         }

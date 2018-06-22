@@ -84,14 +84,11 @@ namespace fc {
     static boost::mutex m; return m;
    }
 
-   void console_appender::log( const log_message& m ) {
-      FILE* out = stream::std_error ? stderr : stdout;
-
+   void console_appender::log( const log_message& m )
+   {
       fc::unique_lock<boost::mutex> lock(log_mutex());
 
       print(default_format(m), my->lc[m.get_context().get_log_level()]);
-
-      if( my->cfg.flush ) fflush( out );
    }
 
    void console_appender::print( const std::string& text, color::type text_color )

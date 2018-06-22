@@ -1,5 +1,6 @@
 #pragma once
-#include <fc/string.hpp>
+
+#include <string>
 #include <fc/time.hpp>
 #include <fc/shared_ptr.hpp>
 #include <fc/log/log_message.hpp>
@@ -22,11 +23,11 @@ namespace fc
    class logger 
    {
       public:
-         static logger get( const fc::string& name = "default");
+    static logger get(const std::string& name = "default");
          static void   clear_all();
 
          logger();
-         logger( const string& name, const logger& parent = nullptr );
+         logger(const std::string& name);
          logger( std::nullptr_t );
          logger( const logger& c );
          logger( logger&& c );
@@ -36,22 +37,14 @@ namespace fc
          friend bool operator==( const logger&, nullptr_t );
          friend bool operator!=( const logger&, nullptr_t );
 
-         logger&    set_log_level( log_level e );
-         log_level  get_log_level()const;
-         logger&    set_parent( const logger& l );
-         logger     get_parent()const;
-
-         void  set_name( const fc::string& n );
-         const fc::string& name()const;
-
          void add_appender( const log_level& log_level, const fc::shared_ptr<appender>& a );
 
          bool is_enabled( log_level e )const;
-         void log( const log_level& log_level, log_message m );
+         void log(const log_level& log_level, const log_message& m);
 
       private:
          class impl;
-         fc::shared_ptr<impl> my;
+         fc::shared_ptr<impl> _my;
    };
 
 } // namespace fc
@@ -75,8 +68,9 @@ namespace fc
 
 #define FC_NAMED_LOG( LOGGER, LEVEL, OUTPUT ) \
   FC_MULTILINE_MACRO_BEGIN \
-   if( (LOGGER).is_enabled( LEVEL ) ) \
-      (LOGGER).log( LEVEL, OUTPUT ); \
+    auto logger = (LOGGER);                                                                                            \
+    if (logger.is_enabled(LEVEL))                                                                                      \
+        logger.log(LEVEL, OUTPUT);                                                                                     \
   FC_MULTILINE_MACRO_END
 
 #define FC_DEFAULT_LOG( LOGGER, LEVEL, OUTPUT ) \

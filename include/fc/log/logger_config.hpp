@@ -9,7 +9,6 @@ namespace fc {
       string   name;
       std::type_index   type;
       variant  args;
-      bool     enabled;
 
       template<typename T>
       static appender_config create_config(const string& name = "", variant args = variant())
@@ -21,20 +20,15 @@ namespace fc {
       appender_config(const std::type_index& type , const string& name, variant args) :
           name(name),
           type(type),
-          args(fc::move(args)),
-          enabled(true)
+          args(fc::move(args))
       {}
    };
 
    struct logger_config {
-      logger_config(const fc::string& name = ""):name(name),enabled(true),additivity(false){}
+      logger_config(const fc::string& name = ""):name(name){}
+
       string                           name;
-      ostring                          parent;
-      /// if not set, then parents level is used.
-      fc::optional<log_level>          level;
-      bool                             enabled;
-      /// if any appenders are specified, then parent's appenders are not set.
-      bool                             additivity;
+      log_level                        level;
       std::vector<string>              appenders;
    };
 
@@ -50,7 +44,7 @@ namespace fc {
 }
 
 #include <fc/reflect/reflect.hpp>
-FC_REFLECT( fc::appender_config, (name)(type)(args)(enabled) )
-FC_REFLECT( fc::logger_config, (name)(parent)(level)(enabled)(additivity)(appenders) )
+FC_REFLECT( fc::appender_config, (name)(type)(args) )
+FC_REFLECT( fc::logger_config, (name)(level)(appenders) )
 FC_REFLECT( fc::logging_config, (appenders)(loggers) )
 

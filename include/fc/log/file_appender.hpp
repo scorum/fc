@@ -12,7 +12,6 @@ class file_appender : public appender {
          struct config {
             config( const fc::path& p = "log.txt" );
 
-            fc::string                         format;
             fc::path                           filename;
             bool                               flush = true;
             bool                               rotate = false;
@@ -31,4 +30,5 @@ class file_appender : public appender {
 
 #include <fc/reflect/reflect.hpp>
 FC_REFLECT( fc::file_appender::config,
-            (format)(filename)(flush)(rotate)(rotation_interval)(rotation_limit) )
+            (filename)(flush)(rotate)(rotation_interval)(rotation_limit) )
+

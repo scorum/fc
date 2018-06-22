@@ -127,7 +127,6 @@ namespace fc {
    };
 
    file_appender::config::config(const fc::path& p) :
-     format( "${timestamp} ${thread_name} ${context} ${file}:${line} ${method} ${level}]  ${message}" ),
      filename(p),
      flush(true),
      rotate(false)
@@ -161,3 +160,4 @@ namespace fc {
    }
 
 } // fc
+

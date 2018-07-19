@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/functor_traits.hpp>
+#include <fc/optional.hpp>
 
 namespace fc {
 namespace impl {
@@ -81,14 +82,28 @@ template <typename T, typename... Ts> struct weak_visitor : T, weak_visitor<Ts..
         , weak_visitor<Ts...>(std::forward<Us>(fs)...) { }
 };
 
-template <typename T> struct weak_visitor<T> : T, result_type_declaration<T>
+template <typename T, typename = void>
+struct weak_visitor_base
+{
+    using result_type = void;
+    template <typename U> void operator()(const U&) const { }
+};
+
+template <typename T>
+struct weak_visitor_base<T, typename std::enable_if<!std::is_void<typename functor_traits<T>::return_type>::value>::type>
+{
+    using result_type = fc::optional<typename functor_traits<T>::return_type>;
+    template <typename U> result_type operator()(const U&) const { return {}; }
+};
+
+template <typename T> struct weak_visitor<T> : T, weak_visitor_base<T>
 {
     using T::operator();
     /**
-     * This is the only difference between 'strict_visitor' and 'weak_visitor'.
-     * 'weak_visitor' will call this template if it obtains variant which doesn't match any of the provided functors.
+     * This is the difference between 'strict_visitor' and 'weak_visitor'.
+     * 'weak_visitor' will call this operator if it obtains variant which doesn't match any of the provided functors.
      */
-    template <typename U> void operator()(const U&) const {}
+    using weak_visitor_base<T>::operator();
 
     template <typename U>
     weak_visitor(U&& f)

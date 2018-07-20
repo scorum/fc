@@ -184,6 +184,10 @@ namespace fc {
         return *this;
       }
 
+      T& value() { assert_optional(valid()); return ref(); }
+      const T& value() const { assert_optional(valid()); return ref(); }
+      template<typename U> T value_or(U&& default_value) const { return valid() ? ref() : default_value; }
+
       bool valid()const     { return _valid;  }
       bool operator!()const { return !_valid; }
 

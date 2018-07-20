@@ -96,7 +96,7 @@ template <typename T> struct safe
     {
         if (b.value == 0)
             FC_CAPTURE_AND_THROW(divide_by_zero_exception, (a)(b));
-        if (a.value == std::numeric_limits<T>::min() && b.value == -1)
+        if (a.value == std::numeric_limits<T>::min() && b.value == (T)-1)
             FC_CAPTURE_AND_THROW(overflow_exception, (a)(b));
         return safe(a.value / b.value);
     }
@@ -104,7 +104,7 @@ template <typename T> struct safe
     {
         if (b.value == 0)
             FC_CAPTURE_AND_THROW(divide_by_zero_exception, (a)(b));
-        if (a.value == std::numeric_limits<T>::min() && b.value == -1)
+        if (a.value == std::numeric_limits<T>::min() && b.value == (T)-1)
             FC_CAPTURE_AND_THROW(overflow_exception, (a)(b));
         return safe(a.value % b.value);
     }

@@ -5,36 +5,6 @@
 
 namespace fc {
 namespace impl {
-namespace cxx17 {
-    template<class...>
-    using void_t = void;
-}
-
-template<typename TF, typename = impl::cxx17::void_t<>>
-struct has_result_type : std::false_type
-{ };
-
-template<typename TF>
-struct has_result_type<TF, impl::cxx17::void_t<typename std::decay<TF>::type::result_type>> : std::true_type
-{ };
-
-/**
- * If 'T' functor doesn't have result_type which is required by fc::static_variant visitors (it is a lambda for example)
- * then declare it
- */
-template<typename T, typename = cxx17::void_t<>>
-struct result_type_declaration
-{
-    using result_type = typename functor_traits<T>::return_type;
-};
-
-/**
- * If it does then DO NOT declare it
- */
-template<typename T>
-struct result_type_declaration<T, cxx17::void_t<typename T::result_type>>
-{ };
-
 /**
  * 'strict' visitor requires all variants provided in functor(s) when you are calling 'variant.visit([functor(s)/lambdas])'
  *
@@ -54,7 +24,7 @@ template <typename T, typename... Ts> struct strict_visitor : T, strict_visitor<
         , strict_visitor<Ts...>(std::forward<Us>(fs)...) { }
 };
 
-template <typename T> struct strict_visitor<T> : T, result_type_declaration<T>
+template <typename T> struct strict_visitor<T> : T
 {
     using T::operator();
 
@@ -63,6 +33,19 @@ template <typename T> struct strict_visitor<T> : T, result_type_declaration<T>
         : T(std::forward<U>(f)) { }
 };
 
+template <typename T, typename = void>
+struct weak_visitor_base
+{
+    using result_type = void;
+    template <typename U> void operator()(const U&) const { }
+};
+
+template <typename T>
+struct weak_visitor_base<T, typename std::enable_if<!std::is_void<typename functor_traits<T>::return_type>::value>::type>
+{
+    using result_type = fc::optional<typename functor_traits<T>::return_type>;
+    template <typename U> result_type operator()(const U&) const { return {}; }
+};
 /**
  * 'weak' visitor DO NOT require all variants provided in functor when you are calling 'variant.visit([functor/lambdas])'
  *
@@ -82,20 +65,6 @@ template <typename T, typename... Ts> struct weak_visitor : T, weak_visitor<Ts..
         , weak_visitor<Ts...>(std::forward<Us>(fs)...) { }
 };
 
-template <typename T, typename = void>
-struct weak_visitor_base
-{
-    using result_type = void;
-    template <typename U> void operator()(const U&) const { }
-};
-
-template <typename T>
-struct weak_visitor_base<T, typename std::enable_if<!std::is_void<typename functor_traits<T>::return_type>::value>::type>
-{
-    using result_type = fc::optional<typename functor_traits<T>::return_type>;
-    template <typename U> result_type operator()(const U&) const { return {}; }
-};
-
 template <typename T> struct weak_visitor<T> : T, weak_visitor_base<T>
 {
     using T::operator();
@@ -111,14 +80,14 @@ template <typename T> struct weak_visitor<T> : T, weak_visitor_base<T>
 };
 }
 
-template <typename T, typename... Ts> auto make_strict_visitor(T&& f, Ts&&... fs)
-    -> decltype(impl::strict_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...))
+template <typename T, typename... Ts>
+auto make_strict_visitor(T&& f, Ts&&... fs)
 {
     return impl::strict_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...);
 }
 
-template <typename T, typename... Ts> auto make_weak_visitor(T&& f, Ts&&... fs)
-    -> decltype(impl::weak_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...))
+template <typename T, typename... Ts>
+auto make_weak_visitor(T&& f, Ts&&... fs)
 {
     return impl::weak_visitor<typename std::decay<T>::type, typename std::decay<Ts>::type...>(std::forward<T>(f), std::forward<Ts>(fs)...);
 }

@@ -617,7 +617,6 @@ namespace fc {
       Stream& stream;
       pack_static_variant( Stream& s ):stream(s){}
 
-      typedef void result_type;
       template<typename T> void operator()( const T& v )const
       {
          fc::raw::pack( stream, v );
@@ -630,7 +629,6 @@ namespace fc {
       Stream& stream;
       unpack_static_variant( Stream& s ):stream(s){}
 
-      typedef void result_type;
       template<typename T> void operator()( T& v )const
       {
          fc::raw::unpack( stream, v );

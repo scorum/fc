@@ -22,6 +22,8 @@ namespace impl {
 
 template<int N, typename... Ts>
 struct storage_ops;
+template<int N, typename... Ts>
+struct storage_ops_deduce_return;
 
 template<typename X, typename... Ts>
 struct position;
@@ -60,17 +62,8 @@ struct storage_ops<N, T&, Ts...> {
     static void del(int n, void *data) {}
     static void con(int n, void *data) {}
 
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, visitor& v) {}
-
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, const visitor& v) {}
-
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, visitor& v) {}
-
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, const visitor& v) {}
+    template<typename TVisitor, typename TData>
+    static typename TVisitor::result_type apply(int n, TData *data, TVisitor& v) {}
 };
 
 template<int N, typename T, typename... Ts>
@@ -84,27 +77,11 @@ struct storage_ops<N, T, Ts...> {
         else storage_ops<N + 1, Ts...>::con(n, data);
     }
 
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, visitor& v) {
-        if(n == N) return v(*reinterpret_cast<T*>(data));
-        else return storage_ops<N + 1, Ts...>::apply(n, data, v);
-    }
+    template<typename TVisitor, typename TData>
+    static typename TVisitor::result_type apply(int n, TData *data, TVisitor& v) {
+        using data_type = std::conditional_t<std::is_const<TData>::value, const T*, T*>;
 
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, const visitor& v) {
-        if(n == N) return v(*reinterpret_cast<T*>(data));
-        else return storage_ops<N + 1, Ts...>::apply(n, data, v);
-    }
-
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, visitor& v) {
-        if(n == N) return v(*reinterpret_cast<const T*>(data));
-        else return storage_ops<N + 1, Ts...>::apply(n, data, v);
-    }
-
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, const visitor& v) {
-        if(n == N) return v(*reinterpret_cast<const T*>(data));
+        if(n == N) return v(*reinterpret_cast<data_type>(data));
         else return storage_ops<N + 1, Ts...>::apply(n, data, v);
     }
 };
@@ -118,21 +95,58 @@ struct storage_ops<N> {
        FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
     }
 
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, visitor& v) {
-       FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
+    template<typename TVisitor, typename TData>
+    static typename TVisitor::result_type apply(int n, TData *data, TVisitor& v) {
+        FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
     }
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, void *data, const visitor& v) {
-       FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
+};
+
+template<int N, typename T, typename... Ts>
+struct storage_ops_deduce_return<N, T&, Ts...> {
+    static void del(int n, void *data) {}
+    static void con(int n, void *data) {}
+
+    template<typename TVisitor, typename TData>
+    static void apply(int n, TData *data, TVisitor& v) {}
+};
+
+template<int N, typename T, typename... Ts>
+struct storage_ops_deduce_return<N, T, Ts...> {
+    static void del(int n, void *data) {
+        if(n == N) reinterpret_cast<T*>(data)->~T();
+        else storage_ops_deduce_return<N + 1, Ts...>::del(n, data);
     }
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, visitor& v) {
-       FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
+    static void con(int n, void *data) {
+        if(n == N) new(reinterpret_cast<T*>(data)) T();
+        else storage_ops_deduce_return<N + 1, Ts...>::con(n, data);
     }
-    template<typename visitor>
-    static typename visitor::result_type apply(int n, const void *data, const visitor& v) {
-       FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid." );
+
+    template<typename TVisitor, typename TData>
+    static auto apply(int n, TData *data, TVisitor& v) {
+        using data_type = std::conditional_t<std::is_const<TData>::value, const T*, T*>;
+
+        if(n == N) return v(*reinterpret_cast<data_type>(data));
+        else return storage_ops_deduce_return<N + 1, Ts...>::apply(n, data, v);
+    }
+};
+
+template<int N, typename T>
+struct storage_ops_deduce_return<N, T> {
+    static void del(int n, void *data) {
+        if(n == N) reinterpret_cast<T*>(data)->~T();
+        else FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid.");
+    }
+    static void con(int n, void *data) {
+        if(n == N) new(reinterpret_cast<T*>(data)) T();
+        else FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid.");
+    }
+
+    template<typename TVisitor, typename TData>
+    static auto apply(int n, TData *data, TVisitor& v) {
+        using data_type = std::conditional_t<std::is_const<TData>::value, const T*, T*>;
+
+        if(n == N) return v(*reinterpret_cast<data_type>(data));
+        else FC_THROW_EXCEPTION( fc::assert_exception, "Internal error: static_variant tag is invalid.");
     }
 };
 
@@ -312,14 +326,14 @@ public:
      *
      * NOTE: No copy/move will be performed
      */
-    template<typename visitor, typename = typename std::enable_if<impl::has_result_type<visitor>::value>::type>
-    typename std::decay<visitor>::type::result_type visit(visitor&& v)const {
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
+    template<typename visitor>
+    auto visit(visitor&& v)const {
+        return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     }
 
-    template<typename visitor, typename = typename std::enable_if<impl::has_result_type<visitor>::value>::type>
-    typename std::decay<visitor>::type::result_type visit(visitor&& v) {
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
+    template<typename visitor>
+    auto visit(visitor&& v) {
+        return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     }
 
     /**
@@ -328,13 +342,10 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto visit(TF&& f, TFs&&... fs) ->
-        typename std::enable_if<sizeof...(TFs) != 0 || !impl::has_result_type<TF>::value,
-            typename decltype(make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...))::result_type
-        >::type
+    auto visit(TF&& f, TFs&&... fs)
     {
         auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
+        return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     };
 
     /**
@@ -343,13 +354,10 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto visit(TF&& f, TFs&&... fs) const ->
-        typename std::enable_if<sizeof...(TFs) != 0 || !impl::has_result_type<TF>::value,
-            typename decltype(make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...))::result_type
-        >::type
+    auto visit(TF&& f, TFs&&... fs) const
     {
         auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
-        return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
+        return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     };
 
     /**
@@ -358,8 +366,7 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto weak_visit(TF&& functor, TFs&&... functors) ->
-        typename decltype(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...))::result_type
+    auto weak_visit(TF&& functor, TFs&&... functors)
     {
         auto v = make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...);
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);
@@ -371,8 +378,7 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto weak_visit(TF&& functor, TFs&&... functors) const ->
-        typename decltype(make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...))::result_type
+    auto weak_visit(TF&& functor, TFs&&... functors) const
     {
         auto v = make_weak_visitor(std::forward<TF>(functor), std::forward<TFs>(functors)...);
         return impl::storage_ops<0, Types...>::apply(_tag, storage, v);

@@ -55,7 +55,7 @@ namespace fc
       my->timestamp   = time_point::now();
       my->thread_name = fc::thread::current().name();
       const char* current_task_desc = fc::thread::current().current_task_desc();
-      my->task_name   = current_task_desc ? current_task_desc : "?unnamed?";
+      my->task_name   = current_task_desc ? current_task_desc : "";
    }
 
    log_context::log_context( const variant& v )

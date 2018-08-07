@@ -12,9 +12,6 @@
 #include "console_defines.h"
 #include <fc/io/stdio.hpp>
 #include <fc/exception/exception.hpp>
-#include <iomanip>
-#include <sstream>
-
 
 namespace fc {
 
@@ -87,50 +84,11 @@ namespace fc {
     static boost::mutex m; return m;
    }
 
-   void console_appender::log( const log_message& m ) {
-      //fc::string message = fc::format_string( m.get_format(), m.get_data() );
-      //fc::variant lmsg(m);
-
-      FILE* out = stream::std_error ? stderr : stdout;
-
-      //fc::string fmt_str = fc::format_string( cfg.format, mutable_variant_object(m.get_context())( "message", message)  );
-      std::stringstream file_line;
-      file_line << m.get_context().get_file() <<":"<<m.get_context().get_line_number() <<" ";
-
-      ///////////////
-      std::stringstream line;
-      line << (m.get_context().get_timestamp().time_since_epoch().count() % (1000ll*1000ll*60ll*60))/1000 <<"ms ";
-      line << std::setw( 10 ) << std::left << m.get_context().get_thread_name().substr(0,9).c_str() <<" "<<std::setw(30)<< std::left <<file_line.str();
-
-      auto me = m.get_context().get_method();
-      // strip all leading scopes...
-      if( me.size() )
-      {
-         uint32_t p = 0;
-         for( uint32_t i = 0;i < me.size(); ++i )
-         {
-             if( me[i] == ':' ) p = i;
-         }
-
-         if( me[p] == ':' ) ++p;
-         line << std::setw( 20 ) << std::left << m.get_context().get_method().substr(p,20).c_str() <<" ";
-      }
-      line << "] ";
-      const std::string& context_str = m.get_context().get_context();
-      if (!context_str.empty())
-      {
-          line << "(" << context_str << ") ";
-      }
-      fc::string message = fc::format_string( m.get_format(), m.get_data() );
-      line << message;//.c_str();
-
+   void console_appender::log( const log_message& m )
+   {
       fc::unique_lock<boost::mutex> lock(log_mutex());
 
-      print( line.str(), my->lc[m.get_context().get_log_level()] );
-
-      fprintf( out, "\n" );
-
-      if( my->cfg.flush ) fflush( out );
+      print(default_format(m), my->lc[m.get_context().get_log_level()]);
    }
 
    void console_appender::print( const std::string& text, color::type text_color )
@@ -145,7 +103,7 @@ namespace fc {
       #endif
 
       if( text.size() )
-         fprintf( out, "%s", text.c_str() ); //fmt_str.c_str() ); 
+         fprintf( out, "%s", text.c_str() );
 
       #ifdef WIN32
       if (my->console_handle != INVALID_HANDLE_VALUE)

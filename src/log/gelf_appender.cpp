@@ -93,14 +93,16 @@ namespace fc
 
     mutable_variant_object gelf_message;
     gelf_message["version"] = "1.1";
-    gelf_message["host"] = my->cfg.host;
     gelf_message["short_message"] = format_string(message.get_format(), message.get_data());
-    
     gelf_message["timestamp"] = context.get_timestamp().time_since_epoch().count() / 1000000.;
+    if (!my->cfg.host_name.empty())
+        gelf_message["host"] = my->cfg.host_name;
 
     switch (context.get_log_level())
     {
     case log_level::debug:
+    case log_level::all:
+      //the level equal to the standard syslog levels
       gelf_message["level"] = 7; // debug
       break;
     case log_level::info:
@@ -112,21 +114,24 @@ namespace fc
     case log_level::error:
       gelf_message["level"] = 3; // error
       break;
-    case log_level::all:
     case log_level::off:
       // these shouldn't be used in log messages, but do something deterministic just in case
-      gelf_message["level"] = 6; // info
-      break;
+      return; // log nothing
     }
 
     if (!context.get_context().empty())
-      gelf_message["context"] = context.get_context();
+      gelf_message["_context"] = context.get_context();
     gelf_message["_line"] = context.get_line_number();
     gelf_message["_file"] = context.get_file();
     gelf_message["_method_name"] = context.get_method();
     gelf_message["_thread_name"] = context.get_thread_name();
     if (!context.get_task_name().empty())
       gelf_message["_task_name"] = context.get_task_name();
+
+    if (!my->cfg.version.empty())
+        gelf_message["_version"] = my->cfg.version;
+    if (!my->cfg.additional_info.empty())
+        gelf_message["_additional_info"] = my->cfg.additional_info;
 
     string gelf_message_as_string = json::to_string(gelf_message);
     //unsigned uncompressed_size = gelf_message_as_string.size();

@@ -122,7 +122,7 @@ struct storage_ops_deduce_return<N, T, Ts...> {
     }
 
     template<typename TVisitor, typename TData>
-    static auto apply(int n, TData *data, TVisitor& v) {
+    static decltype(auto) apply(int n, TData *data, TVisitor& v) {
         using data_type = std::conditional_t<std::is_const<TData>::value, const T*, T*>;
 
         if(n == N) return v(*reinterpret_cast<data_type>(data));
@@ -142,7 +142,7 @@ struct storage_ops_deduce_return<N, T> {
     }
 
     template<typename TVisitor, typename TData>
-    static auto apply(int n, TData *data, TVisitor& v) {
+    static decltype(auto) apply(int n, TData *data, TVisitor& v) {
         using data_type = std::conditional_t<std::is_const<TData>::value, const T*, T*>;
 
         if(n == N) return v(*reinterpret_cast<data_type>(data));
@@ -327,12 +327,12 @@ public:
      * NOTE: No copy/move will be performed
      */
     template<typename visitor>
-    auto visit(visitor&& v)const {
+    decltype(auto) visit(visitor&& v)const {
         return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     }
 
     template<typename visitor>
-    auto visit(visitor&& v) {
+    decltype(auto) visit(visitor&& v) {
         return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
     }
 
@@ -342,7 +342,7 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto visit(TF&& f, TFs&&... fs)
+    decltype(auto) visit(TF&& f, TFs&&... fs)
     {
         auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
         return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);
@@ -354,7 +354,7 @@ public:
      * NOTE: All these functors will be copied/moved in order to construct visitor.
      */
     template<typename TF, typename... TFs>
-    auto visit(TF&& f, TFs&&... fs) const
+    decltype(auto) visit(TF&& f, TFs&&... fs) const
     {
         auto v = make_strict_visitor(std::forward<TF>(f), std::forward<TFs>(fs)...);
         return impl::storage_ops_deduce_return<0, Types...>::apply(_tag, storage, v);

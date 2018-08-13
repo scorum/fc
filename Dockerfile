@@ -52,6 +52,7 @@ RUN \
 RUN \
     cd /usr/local/src/fc/build && \
     ls -lRa ../tests && \
-    ls -lRa .
+    ls -lRa . && \
+    ./tests/all_tests
 
 CMD ["/bin/ls", "/usr/local/src/fc/build"]

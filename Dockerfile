@@ -49,7 +49,7 @@ RUN \
     make -j$(nproc) all
 
 RUN \
-    cd /usr/local/src/fc/build && #
+    cd /usr/local/src/fc/build && \
     ../tests/tests
 
 CMD ["/bin/ls", "/usr/local/src/fc/build"]

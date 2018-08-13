@@ -53,6 +53,6 @@ RUN \
     cd /usr/local/src/fc/build && \
     ls -lRa ../tests && \
     ls -lRa . && \
-    ./tests/all_tests --show_progress
+    ./tests/all_tests --log_level=all
 
 CMD ["/bin/ls", "/usr/local/src/fc/build"]

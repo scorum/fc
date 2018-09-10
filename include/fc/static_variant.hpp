@@ -285,11 +285,22 @@ public:
     }
     friend bool operator == ( const static_variant& a, const static_variant& b )
     {
-       return a.which() == b.which();
+       return a.equal_to(b);
     }
     friend bool operator < ( const static_variant& a, const static_variant& b )
     {
-       return a.which() < b.which();
+       return a.less_than(b);
+    }
+
+    // Use template specialization to overload these comparison functions
+    bool less_than(const static_variant& b) const
+    {
+        return which() < b.which();
+    }
+
+    bool equal_to(const static_variant& b) const
+    {
+        return which() == b.which();
     }
 
     template<typename X>

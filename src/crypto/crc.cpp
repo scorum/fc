@@ -535,6 +535,9 @@ uint32_t crc32cSlicingBy8(uint32_t crc, const void* data, size_t length) {
 /* with 24 and 32 Parity Bits",                                  */
 /* IEEE Transactions on Communications, Vol.41, No.6, June 1993  */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-const-variable"
+
 static const uint32_t crc_c[256] = {
         0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4,
         0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB,
@@ -601,6 +604,8 @@ static const uint32_t crc_c[256] = {
          0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E,
          0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351,
  };
+#pragma clang diagnostic pop
+
 #if !defined __SSE4_2__ || (defined __SSE4_2__ && !defined __x86_64__)
 
 

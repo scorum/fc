@@ -93,7 +93,7 @@ namespace fc {
 
        line << std::endl;
 
-       return std::move(line.str());
+       return line.str();
    }
 
    FC_UNUSED static bool reg_console_appender = appender::create_appender_factory<console_appender>();

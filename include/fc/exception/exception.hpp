@@ -55,7 +55,7 @@ namespace fc
     *  @see FC_RETHROW_EXCEPTION
     *  @see FC_RETHROW_EXCEPTIONS
     */
-   class exception
+   class exception : public std::exception
    {
       public:
          enum code_enum
@@ -80,9 +80,9 @@ namespace fc
          exception( exception&& e );
          virtual ~exception();
 
-         const char*          name()const throw();
-         int64_t              code()const throw();
-         virtual const char*  what()const throw();
+         const char*          name()const noexcept;
+         int64_t              code()const noexcept;
+         const char*          what()const noexcept override;
 
          /**
           *   @return a reference to log messages that have

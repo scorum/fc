@@ -189,7 +189,7 @@ using fixed_string_24 = fixed_string<fc::erpair<fc::uint128_t, uint64_t>>;
 using fixed_string_32 = fixed_string<fc::erpair<fc::uint128_t, fc::uint128_t>>;
 using uint256_t = fc::erpair<fc::uint128_t, fc::uint128_t>;
 using uint512_t = fc::erpair<uint256_t, uint256_t>;
-using fixed_utf8_string_24 = fixed_string<fc::erpair<uint256_t, uint512_t>>; //768 bits = 4bytes x 24
+using fixed_utf8_string_24 = fixed_string<fc::erpair<uint256_t, uint512_t>>; // 768 bits = 4bytes x 24
 
 namespace raw {
 
@@ -231,3 +231,19 @@ template <typename Stream, typename Storage> Stream& operator>>(Stream& stream, 
     return stream;
 }
 } // namespace fc
+
+namespace boost {
+template <typename T> auto hash_value(const fc::fixed_string<T>& str)
+{
+    auto it = (const char*)&str.data;
+    auto count = sizeof(str.data);
+
+    size_t hash = 0;
+    for (size_t i = 0; i < count; ++i, ++it)
+    {
+        hash_combine(hash, *it);
+    }
+
+    return hash;
+}
+}

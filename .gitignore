@@ -52,3 +52,5 @@ ntp_test
 task_cancel_test
 udt_client
 udt_server
+.idea
+cmake-build-*

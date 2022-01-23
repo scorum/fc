@@ -298,7 +298,7 @@ namespace fc { namespace http {
                //if( server_pem.size() )
                {
                   _server.set_tls_init_handler( [=]( websocketpp::connection_hdl hdl ) -> context_ptr {
-                        context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
+                        context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
                         try {
                            ctx->set_options(boost::asio::ssl::context::default_workarounds |
                            boost::asio::ssl::context::no_sslv2 |
@@ -532,7 +532,7 @@ namespace fc { namespace http {
                 std::string ca_filename_copy = ca_filename;
 
                 _client.set_tls_init_handler( [=](websocketpp::connection_hdl) {
-                   context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv1);
+                   context_ptr ctx = websocketpp::lib::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
                    try {
                       ctx->set_options(boost::asio::ssl::context::default_workarounds |
                       boost::asio::ssl::context::no_sslv2 |
